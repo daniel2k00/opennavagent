@@ -1,0 +1,29 @@
+node_modules/
+dist/
+.env
+.env.local
+*.log
+
+# Valhalla data (huge files, downloaded by /setup skill)
+docker/valhalla_tiles/
+docker/*.osm.pbf
+
+# Installed skills (per-fork artifacts created by /add-<name> playbooks).
+# The shipped playbooks live in .claude/; the compiled skills are not
+# shipped — every user installs only the ones they want.
+skills/*/
+!skills/.gitkeep
+
+# Local route memory
+routes/*/
+!routes/default/
+!routes/.gitkeep
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Editor
+.vscode/
+.idea/
+*.swp

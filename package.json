@@ -1,0 +1,46 @@
+{
+  "name": "opennavagent",
+  "version": "0.1.0",
+  "description": "OpenNavAgent — Open-source AI navigation agent. Natural-language routing on OpenStreetMap. Skills-based, like nanoclaw for maps.",
+  "type": "module",
+  "main": "dist/index.js",
+  "bin": {
+    "opennavagent": "dist/cli.js"
+  },
+  "scripts": {
+    "dev": "tsx watch src/index.ts",
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "typecheck": "tsc --noEmit",
+    "valhalla:up": "docker compose -f docker/docker-compose.yml up -d",
+    "valhalla:down": "docker compose -f docker/docker-compose.yml down",
+    "valhalla:logs": "docker compose -f docker/docker-compose.yml logs -f valhalla"
+  },
+  "keywords": [
+    "navigation",
+    "ai",
+    "openstreetmap",
+    "valhalla",
+    "routing",
+    "llm",
+    "agent",
+    "open-source"
+  ],
+  "license": "Apache-2.0",
+  "dependencies": {
+    "ai": "^5.0.0",
+    "@ai-sdk/anthropic": "^2.0.0",
+    "@ai-sdk/openai": "^2.0.0",
+    "hono": "^4.6.0",
+    "@hono/node-server": "^1.13.0",
+    "zod": "^3.23.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "tsx": "^4.19.0",
+    "typescript": "^5.6.0"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
