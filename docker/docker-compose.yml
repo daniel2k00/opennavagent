@@ -1,0 +1,23 @@
+services:
+  valhalla:
+    image: ghcr.io/gis-ops/docker-valhalla/valhalla:latest
+    container_name: opennavagent-valhalla
+    ports:
+      - "8002:8002"
+    volumes:
+      - ./valhalla_tiles:/custom_files
+    environment:
+      # Default bootstrap: California (covers the SF→Monterey example in the README).
+      # Tile build takes 20–40 min on first run. The /setup skill will ask you which
+      # region you want, or you can edit this line directly to any Geofabrik extract.
+      - tile_urls=https://download.geofabrik.de/north-america/us/california-latest.osm.pbf
+      - use_tiles_ignore_pbf=True
+      - force_rebuild=False
+      - server_threads=2
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8002/status"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 120s
+    restart: unless-stopped
