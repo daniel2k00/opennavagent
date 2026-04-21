@@ -16,23 +16,41 @@ export function isValhallaRunning(): boolean {
   }
 }
 
+/**
+ * Kicks off Valhalla but does NOT block server startup waiting for tiles.
+ * First-run tile builds for a whole country take 5–30 min; blocking here
+ * would hide the HTTP server from the user for that entire period.
+ * Instead we start Valhalla in the background and expose readiness via /healthz.
+ */
 export async function ensureValhalla(): Promise<void> {
-  if (isValhallaRunning()) return;
-  console.log('[opennavagent] Starting Valhalla container...');
-  execSync('docker compose -f docker/docker-compose.yml up -d', { stdio: 'inherit' });
-
-  const url = process.env.VALHALLA_URL ?? 'http://localhost:8002';
-  for (let i = 0; i < 60; i++) {
-    try {
-      const res = await fetch(`${url}/status`);
-      if (res.ok) {
-        console.log('[opennavagent] Valhalla is ready.');
-        return;
-      }
-    } catch {
-      // still starting
-    }
-    await new Promise((r) => setTimeout(r, 1000));
+  if (isValhallaRunning()) {
+    console.log('[opennavagent] Valhalla is already running.');
+    return;
   }
-  throw new Error('Valhalla did not become ready within 60 seconds.');
+
+  console.log('[opennavagent] Starting Valhalla container...');
+  try {
+    execSync('docker compose -f docker/docker-compose.yml up -d', { stdio: 'inherit' });
+  } catch {
+    console.warn('[opennavagent] Could not start Valhalla. Run `npm run valhalla:up` manually.');
+    return;
+  }
+
+  console.log('[opennavagent] Valhalla is coming up. First-run tile build takes 5–30 min.');
+  console.log('[opennavagent] Watch progress: npm run valhalla:logs');
+  console.log('[opennavagent] Check readiness: curl http://localhost:3000/healthz');
+}
+
+/**
+ * Non-blocking readiness check used by /healthz. Short timeout so a slow
+ * Valhalla doesn't make the health endpoint itself hang.
+ */
+export async function isValhallaReady(): Promise<boolean> {
+  const url = process.env.VALHALLA_URL ?? 'http://localhost:8002';
+  try {
+    const res = await fetch(`${url}/status`, { signal: AbortSignal.timeout(2000) });
+    return res.ok;
+  } catch {
+    return false;
+  }
 }

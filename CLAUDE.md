@@ -8,7 +8,7 @@ An open-source AI navigation agent. It turns free-text ("take me along the coast
 
 ## Non-negotiable rules
 
-1. **Keep the core small.** The six files in `src/` must stay under ~1,000 lines total. If a change would push past that, the change belongs in a skill, not the core.
+1. **Keep the core small.** The six files in `src/` must stay under ~1,000 lines total (currently ~410). If a change would push past that, the change belongs in a skill, not the core.
 2. **Skills extend, features don't.** New capability? Create a `.claude/add-<thing>.md` skill. Do not add it to `src/`.
 3. **No config files.** If behavior should change, change code. Period.
 4. **Model-agnostic.** Never hardcode Anthropic/OpenAI anywhere. Always go through `@ai-sdk/*` adapters selected from `OPENNAVAGENT_MODEL`.

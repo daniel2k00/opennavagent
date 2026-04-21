@@ -1,20 +1,27 @@
 # 🧠 OpenNavAgent
 
-> **Open-source AI navigation agent. Natural-language routing on OpenStreetMap. Skills-based for maps.**
+> **Tell your map what you actually want. In English.**
+>
+> *"Take me along the coast from Tel Aviv to Haifa, no highways, stop for coffee somewhere nice."*
+>
+> Google Maps can't do that. Waze can't do that. OpenNavAgent can.
+>
+> Self-hosted. Open-source. A brain you can read in 30 minutes — ~400 lines of TypeScript.
 
 [![License: Apache 2.0](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 [![TypeScript](https://img.shields.io/badge/TypeScript-007ACC?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
+[![CI](https://github.com/daniel2k00/opennavagent/actions/workflows/ci.yml/badge.svg)](https://github.com/daniel2k00/opennavagent/actions/workflows/ci.yml)
 
 ---
 
-OpenNavAgent is the *brain* that sits on top of open-source mapping tools (OpenStreetMap, Valhalla) and turns natural-language requests into real routes.
+OpenNavAgent is the *brain* that sits on top of open-source mapping tools (OpenStreetMap + Valhalla) and turns natural-language requests into real routes. The LLM doesn't just format the output — it **decides how to route**.
 
 ```
 "Take me through the coast, no highways, stop for coffee somewhere nice."
                               │
                               ▼
                      ┌─────────────────┐
-                     │  OpenNavAgent   │  ◀── ~1,000 lines of TypeScript
+                     │  OpenNavAgent   │  ◀── ~400 lines, 6 files
                      │   (the brain)   │
                      └────────┬────────┘
                               │
@@ -26,20 +33,20 @@ OpenNavAgent is the *brain* that sits on top of open-source mapping tools (OpenS
 
 ---
 
-## Why OpenNavAgent
+## Why not just use Google Maps?
 
-Every existing option is missing at least one of the things you need:
+| | AI-native | Open source | For human drivers | Skills-based | Cost per 1M requests |
+|---|---|---|---|---|---|
+| Google Directions / Waze | Chat layer only | ❌ | ✅ | ❌ | ~$5,000 |
+| Mapbox Directions | ❌ | ❌ | ✅ | ❌ | ~$2,000 |
+| Valhalla / OSRM / GraphHopper | ❌ | ✅ | ✅ | ❌ | $0 (self-host) |
+| OsmAnd / CoMaps | ❌ | ✅ | ✅ | ❌ | $0 |
+| Academic LLM-navigation | ✅ | ✅ | ❌ (robots/AVs) | ❌ | N/A |
+| **OpenNavAgent** | **✅** | **✅** | **✅** | **✅** | **$0** (+ your LLM bill) |
 
-| | AI-native | Open source | For human drivers | Skills-based |
-|---|---|---|---|---|
-| Google Maps / Waze | Chat layer only | ❌ | ✅ | ❌ |
-| Valhalla / OSRM / GraphHopper | ❌ | ✅ | ✅ | ❌ |
-| OsmAnd / CoMaps | ❌ | ✅ | ✅ | ❌ |
-| Academic LLM-navigation | ✅ | ✅ | ❌ (robots/AVs) | ❌ |
-| **OpenNavAgent** | **✅** | **✅** | **✅** | **✅** |
+For a team sending 1M navigation queries/month, that's **$5,000/month vs. the cost of a VPS and your OpenAI bill**.
 
 ---
-
 
 ## Quick Start
 
@@ -57,7 +64,11 @@ curl -X POST http://localhost:3000/route \
   -d '{"text":"drive from 32.0853,34.7818 to 32.7940,34.9896 avoiding highways"}'
 ```
 
-That's it. You'll get back a structured intent, a full route, and a human explanation.
+For address-based routing (`"from Rothschild 45 Tel Aviv to Haifa port"`), install the geocoder:
+
+```
+/add-geocoding
+```
 
 ---
 
@@ -67,26 +78,36 @@ Six files. That's the whole brain.
 
 | File | Role | Lines |
 |---|---|---|
-| `src/index.ts` | Orchestrator + HTTP server | ~70 |
-| `src/intent.ts` | LLM → structured intent | ~40 |
-| `src/planner.ts` | Intent → Valhalla route | ~90 |
-| `src/skills.ts` | Runtime plugin loader | ~60 |
-| `src/container.ts` | Valhalla lifecycle | ~40 |
+| `src/index.ts` | HTTP server + `navigate()` orchestrator | ~80 |
+| `src/intent.ts` | LLM → structured Intent (Zod) | ~50 |
+| `src/planner.ts` | Intent → Valhalla route + geocoding fallback | ~90 |
+| `src/skills.ts` | Runtime plugin loader w/ per-skill isolation | ~90 |
+| `src/container.ts` | Non-blocking Valhalla lifecycle | ~55 |
 | `src/types.ts` | Shared types (Zod) | ~50 |
 
-**That's ~350 lines.** Everything else (geocoding, voice, mood, coastal, shelter routing…) is a skill.
+**That's ~410 lines.** Everything else (geocoding, voice, mood, coastal, shelter routing…) is a skill.
+
+### HTTP endpoints
+
+| Method + Path | Purpose |
+|---|---|
+| `GET /` | Name, version, installed skills with descriptions |
+| `GET /healthz` | 200 when Valhalla is up; 503 while tiles are building |
+| `GET /skills` | Detailed skill list (name + description) |
+| `POST /route` | Natural-language routing — `{text, context?}` → `{intent, route, explanation}` |
 
 ---
 
 ## Skills
 
-Skills live in `.claude/*.md`. Each one is a Markdown document telling Claude/Cursor exactly how to modify your fork.
+Skills live in `.claude/*.md`. Each one is a Markdown playbook telling Claude/Cursor exactly how to modify your fork.
 
-### Shipped skills
+### Shipped playbooks
 
 | Skill | What it does |
 |---|---|
 | `/setup` | First-time setup: Docker check, Valhalla bootstrap, `.env` scaffolding |
+| `/add-geocoding` | Adds Nominatim so you can ask for real addresses, not just `lat,lon` |
 | `/add-coastal-routing` | Adds "take me along the coast" intent + Valhalla weighting |
 | `/add-mood-routing` | Route by mood: `chill`, `focused`, `adventurous`, `romantic`, `safe` |
 | `/add-shelter-routing` | Wartime routing — passes through OSM public shelters (`amenity=shelter`) |
@@ -95,13 +116,29 @@ Skills live in `.claude/*.md`. Each one is a Markdown document telling Claude/Cu
 
 - `/add-voice` — Whisper (STT) + TTS for hands-free use
 - `/add-scenic-routing` — Prefer roads with scenic viewpoints from OSM tags
-- `/add-geocoding` — Swap the "lat,lon-only" stub for Nominatim/Photon
 - `/add-realtime-reroute` — Re-plan mid-trip based on conversation
 - `/add-rocket-alerts` — Real-time integration with Israeli Home Front Command alerts
 - `/use-local-llama` — Run fully local with Ollama
 - `/add-calendar` — Build routes around your Google/Apple calendar
 
 **Want one?** Open an issue with the label `rfs`.
+
+### Skill anatomy
+
+A skill is a `./skills/<name>/index.js` file exporting a `Skill` object with up to four optional hooks:
+
+```js
+const skill = {
+  name: 'coastal-routing',
+  description: 'Bias the route toward touristic coastal roads.',
+  intentPrompt: 'Add "coastal" to intent.prefer when the user mentions sea / coast / beach.',
+  transformRoute(request, intent) { /* mutate Valhalla request */ },
+  resolveLocation(place) { /* return {lat, lon} | null */ },
+};
+export default skill;
+```
+
+That's the whole API. One bad skill won't crash the server — each is loaded in its own `try`/`catch`.
 
 ---
 
@@ -120,14 +157,14 @@ const result = await navigate({
 });
 
 console.log(result.route.summary);    // "94.2 km, ~78 min"
-console.log(result.explanation);       // Human-readable plan
+console.log(result.explanation);      // Human-readable plan
 ```
 
 ### As a service
 
 ```bash
 npm run dev
-# → POST http://localhost:3000/route
+# → POST http://localhost:3000/route (CORS enabled)
 ```
 
 ---

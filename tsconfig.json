@@ -12,8 +12,9 @@
     "declaration": true,
     "sourceMap": true,
     "forceConsistentCasingInFileNames": true,
-    "noUncheckedIndexedAccess": true
+    "noUncheckedIndexedAccess": true,
+    "types": ["node"]
   },
   "include": ["src/**/*"],
-  "exclude": ["node_modules", "dist", "skills"]
+  "exclude": ["node_modules", "dist", "skills", "src/**/*.test.ts"]
 }

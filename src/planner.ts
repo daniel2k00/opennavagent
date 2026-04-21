@@ -1,18 +1,26 @@
 import type { Intent, Route, Coordinate } from './types.js';
-import { applyPlannerSkills } from './skills.js';
+import { applyPlannerSkills, resolveViaSkills } from './skills.js';
 
 const VALHALLA_URL = process.env.VALHALLA_URL ?? 'http://localhost:8002';
+const VALHALLA_TIMEOUT_MS = 30_000;
 
 /**
- * Minimal geocoder stub. Real geocoding is a skill (/add-geocoding).
- * For now, accept "lat,lon" strings or throw so users know to install the skill.
+ * Core geocoder: accepts "lat,lon" directly; delegates everything else
+ * to skills via resolveLocation() — first match wins. If no skill
+ * resolves, we raise a hint that steers the user to /add-geocoding.
  */
-function geocode(place: string, fallback?: Coordinate): Coordinate {
+async function geocode(place: string, fallback?: Coordinate): Promise<Coordinate> {
   if (place === 'current location' && fallback) return fallback;
+
   const m = place.match(/^\s*(-?\d+(?:\.\d+)?)\s*,\s*(-?\d+(?:\.\d+)?)\s*$/);
   if (m) return { lat: parseFloat(m[1]!), lon: parseFloat(m[2]!) };
+
+  const viaSkill = await resolveViaSkills(place);
+  if (viaSkill) return viaSkill;
+
   throw new Error(
-    `Cannot geocode "${place}". Install a geocoding skill: cursor → /add-geocoding`
+    `Cannot resolve "${place}" to coordinates. ` +
+      `Install a geocoding skill (cursor: /add-geocoding) or pass "lat,lon" directly.`
   );
 }
 
@@ -21,9 +29,9 @@ function geocode(place: string, fallback?: Coordinate): Coordinate {
  * Skills mutate this object to inject custom routing rules.
  */
 async function buildValhallaRequest(intent: Intent, current?: Coordinate) {
-  const origin = geocode(intent.origin, current);
-  const destination = geocode(intent.destination);
-  const waypoints = intent.waypoints.map((w) => geocode(w));
+  const origin = await geocode(intent.origin, current);
+  const destination = await geocode(intent.destination);
+  const waypoints = await Promise.all(intent.waypoints.map((w) => geocode(w)));
 
   const locations = [origin, ...waypoints, destination].map((c) => ({
     lat: c.lat,
@@ -54,6 +62,7 @@ export async function planRoute(intent: Intent, current?: Coordinate): Promise<R
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(body),
+    signal: AbortSignal.timeout(VALHALLA_TIMEOUT_MS),
   });
 
   if (!res.ok) {

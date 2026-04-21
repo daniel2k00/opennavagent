@@ -1,36 +1,56 @@
 {
   "name": "opennavagent",
   "version": "0.1.0",
-  "description": "OpenNavAgent — Open-source AI navigation agent. Natural-language routing on OpenStreetMap. Skills-based, like nanoclaw for maps.",
+  "description": "OpenNavAgent — Open-source AI navigation agent. Natural-language routing on OpenStreetMap. Skills-based.",
   "type": "module",
   "main": "dist/index.js",
-  "bin": {
-    "opennavagent": "dist/cli.js"
-  },
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist",
+    "docker",
+    ".claude",
+    "LICENSE",
+    "README.md",
+    "CHANGELOG.md"
+  ],
   "scripts": {
     "dev": "tsx watch src/index.ts",
     "build": "tsc",
     "start": "node dist/index.js",
     "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
     "valhalla:up": "docker compose -f docker/docker-compose.yml up -d",
     "valhalla:down": "docker compose -f docker/docker-compose.yml down",
     "valhalla:logs": "docker compose -f docker/docker-compose.yml logs -f valhalla"
   },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/daniel2k00/opennavagent.git"
+  },
+  "homepage": "https://github.com/daniel2k00/opennavagent#readme",
+  "bugs": {
+    "url": "https://github.com/daniel2k00/opennavagent/issues"
+  },
   "keywords": [
     "navigation",
     "ai",
+    "ai-agents",
     "openstreetmap",
     "valhalla",
     "routing",
     "llm",
     "agent",
-    "open-source"
+    "open-source",
+    "claude-skills",
+    "cursor-skills"
   ],
+  "author": "daniel2k00",
   "license": "Apache-2.0",
   "dependencies": {
-    "ai": "^5.0.0",
-    "@ai-sdk/anthropic": "^2.0.0",
-    "@ai-sdk/openai": "^2.0.0",
+    "ai": "~5.0.0",
+    "@ai-sdk/anthropic": "~2.0.0",
+    "@ai-sdk/openai": "~2.0.0",
     "hono": "^4.6.0",
     "@hono/node-server": "^1.13.0",
     "zod": "^3.23.0"
@@ -38,7 +58,8 @@
   "devDependencies": {
     "@types/node": "^22.0.0",
     "tsx": "^4.19.0",
-    "typescript": "^5.6.0"
+    "typescript": "^5.6.0",
+    "vitest": "^2.1.0"
   },
   "engines": {
     "node": ">=20"
