@@ -40,18 +40,6 @@ Every existing option is missing at least one of the things you need:
 
 ---
 
-## Philosophy
-
-OpenNavAgent borrows its philosophy from [`nanoclaw`](https://github.com/qwibitai/nanoclaw):
-
-- **Small enough to understand.** The entire core is 6 files and under 1,000 lines. Read it in 30 minutes.
-- **Skills over features.** Want "mood-based routing"? Don't PR a feature — run `/add-mood-routing` and your fork grows the skill. Cleaner code, zero bloat.
-- **Bespoke, not monolithic.** Fork OpenNavAgent and let Cursor/Claude Code modify it to fit *your* exact use case.
-- **AI-native.** No setup wizard. No config files. Ask Cursor to set it up, ask Cursor to debug it, ask Cursor to extend it.
-- **Secure by isolation.** The routing engine runs in a Docker container. Your LLM calls go through your own API key.
-- **Model-agnostic.** Claude, GPT, Llama, Ollama — via Vercel AI SDK.
-
----
 
 ## Quick Start
 
