@@ -1,6 +1,6 @@
 # 🧠 OpenNavAgent
 
-> **Open-source AI navigation agent. Natural-language routing on OpenStreetMap. Skills-based, like nanoclaw for maps.**
+> **Open-source AI navigation agent. Natural-language routing on OpenStreetMap. Skills-based for maps.**
 
 [![License: Apache 2.0](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 [![TypeScript](https://img.shields.io/badge/TypeScript-007ACC?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
